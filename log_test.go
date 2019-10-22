@@ -6,6 +6,7 @@ package logging
 
 import (
 	"bytes"
+	//	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -44,7 +45,7 @@ func rec(log *Logger, r int) {
 	rec(log, r-1)
 }
 
-func testCallpath(t *testing.T, format string, expect string) {
+func testCallpath(t *testing.T, testId int, format string, expect string) {
 	buf := &bytes.Buffer{}
 	SetBackend(NewLogBackend(buf, "", log.Lshortfile))
 	SetFormatter(MustStringFormatter(format))
@@ -53,28 +54,30 @@ func testCallpath(t *testing.T, format string, expect string) {
 	rec(logger, 6)
 
 	parts := strings.SplitN(buf.String(), " ", 3)
+	//fmt.Println(buf)
 
 	// Verify that the correct filename is registered by the stdlib logger
 	if !strings.HasPrefix(parts[0], "log_test.go:") {
-		t.Errorf("incorrect filename: %s", parts[0])
+		t.Errorf("incorrect filename: %d %s %s", testId, parts[0], expect)
 	}
 	// Verify that the correct callpath is registered by go-logging
 	if !strings.HasPrefix(parts[1], expect) {
-		t.Errorf("incorrect callpath: %s", parts[1])
+		t.Errorf("incorrect callpath: %d %s %s", testId, parts[1], expect)
 	}
 	// Verify that the correct message is registered by go-logging
 	if !strings.HasPrefix(parts[2], "test callpath") {
-		t.Errorf("incorrect message: %s", parts[2])
+		t.Errorf("incorrect message: %d %s %s", testId, parts[2], expect)
 	}
 }
 
 func TestLogCallpath(t *testing.T) {
-	testCallpath(t, "%{callpath} %{message}", "TestLogCallpath.testCallpath.rec...rec.a.b.c")
-	testCallpath(t, "%{callpath:-1} %{message}", "TestLogCallpath.testCallpath.rec...rec.a.b.c")
-	testCallpath(t, "%{callpath:0} %{message}", "TestLogCallpath.testCallpath.rec...rec.a.b.c")
-	testCallpath(t, "%{callpath:1} %{message}", "~.c")
-	testCallpath(t, "%{callpath:2} %{message}", "~.b.c")
-	testCallpath(t, "%{callpath:3} %{message}", "~.a.b.c")
+	testCallpath(t, 0, "%{callpath} %{message}", "TestLogCallpath.String.rec...a.b.c")
+	testCallpath(t, 1, "%{callpath:-1} %{message}", "TestLogCallpath.String.rec...a.b.c")
+	testCallpath(t, 2, "%{callpath:0} %{message}", "TestLogCallpath.String.rec...a.b.c")
+	testCallpath(t, 3, "%{callpath:1} %{message}", "~.c")
+	testCallpath(t, 4, "%{callpath:2} %{message}", "~.b.c")
+	testCallpath(t, 5, "%{callpath:3} %{message}", "~.a.b.c")
+	//testCallpath(t, 6, `%{time:0102 15:04:05.000} %{callpath:3} - %{level:.4s} %{id:03x} %{message}`, "~.a.b.c")
 }
 
 func BenchmarkLogMemoryBackendIgnored(b *testing.B) {

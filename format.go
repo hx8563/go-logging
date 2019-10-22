@@ -362,7 +362,7 @@ func formatFuncName(v fmtVerb, f string) string {
 func formatCallpath(calldepth int, depth int) string {
 	v := ""
 	callers := make([]uintptr, 64)
-	n := runtime.Callers(calldepth+2, callers)
+	n := runtime.Callers(calldepth+3, callers)
 	oldPc := callers[n-1]
 
 	start := n - 3
@@ -371,6 +371,14 @@ func formatCallpath(calldepth int, depth int) string {
 		v += "~."
 	}
 	recursiveCall := false
+
+	// fmt.Println("---")
+	for _, pc := range callers {
+		if f := runtime.FuncForPC(pc); f != nil {
+			//fmt.Println("xxx", f.Name())
+		}
+	}
+
 	for i := start; i >= 0; i-- {
 		pc := callers[i]
 		if oldPc == pc {
