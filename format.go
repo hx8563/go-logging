@@ -362,30 +362,33 @@ func formatFuncName(v fmtVerb, f string) string {
 func formatCallpath(calldepth int, depth int) string {
 	v := ""
 	callers := make([]uintptr, 64)
-	n := runtime.Callers(calldepth+3, callers)
-	oldPc := callers[n-1]
+	n := runtime.Callers(calldepth+2, callers)
+	oldFunc := runtime.FuncForPC(callers[n-1]).Name()
 
 	start := n - 3
 	if depth > 0 && start >= depth {
-		start = depth - 1
+		start = depth
 		v += "~."
 	}
 	recursiveCall := false
 
-	// fmt.Println("---")
+	//fmt.Println("---")
 	for _, pc := range callers {
 		if f := runtime.FuncForPC(pc); f != nil {
-			//fmt.Println("xxx", f.Name())
+			//fmt.Println("xxx", f.Name(), pc)
 		}
 	}
 
 	for i := start; i >= 0; i-- {
 		pc := callers[i]
-		if oldPc == pc {
+		f := runtime.FuncForPC(pc)
+		fnName := f.Name()
+		fmt.Println(fnName)
+		if oldFunc == fnName {
 			recursiveCall = true
 			continue
 		}
-		oldPc = pc
+		oldFunc = fnName
 		if recursiveCall {
 			recursiveCall = false
 			v += ".."
@@ -393,9 +396,8 @@ func formatCallpath(calldepth int, depth int) string {
 		if i < start {
 			v += "."
 		}
-		if f := runtime.FuncForPC(pc); f != nil {
-			v += formatFuncName(fmtVerbShortfunc, f.Name())
-		}
+		v += formatFuncName(fmtVerbShortfunc, fnName)
+		//fmt.Println(v)
 	}
 	return v
 }
