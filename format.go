@@ -383,7 +383,7 @@ func formatCallpath(calldepth int, depth int) string {
 		pc := callers[i]
 		f := runtime.FuncForPC(pc)
 		fnName := f.Name()
-		fmt.Println(fnName)
+		//fmt.Println(fnName)
 		if oldFunc == fnName {
 			recursiveCall = true
 			continue
